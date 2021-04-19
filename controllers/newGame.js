@@ -72,11 +72,11 @@ export default async function newGame(ctx, next) {
         game_log: []
     }
 
-    // await db.collection('games')
-    //         .doc(gameID)
-    //         .set(game)
-    //         .then(() => {})
-    //         .catch(err => {ctx.throw(500, 'Internal server error')});
+    await db.collection('games')
+            .doc(gameID)
+            .set(game)
+            .then(() => {})
+            .catch(err => {ctx.throw(500, 'Internal server error')});
 
     ctx.body = game;
 }
