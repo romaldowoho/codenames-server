@@ -14,25 +14,29 @@ const getTeams = () => {
     return n > 0 ? ['red','blue'] : ['blue','red'];
 }
 
+// 1400 adjectives, 350 animals, 50 colors for a total of 24.5 million possible IDs
 const generateGameID = () => {
     return uniqueNamesGenerator({
         dictionaries: [colors, adjectives, animals]
     });
 }
+/**********************************************************************************************************************/
+export default async function newGame() {
+    const socket = this;
+    // const player = ctx.request.body.nickname;
 
-export default async function newGame(ctx, next) {
-    const player = ctx.request.body.nickname;
-    // 1400 adjectives, 350 animals, 50 colors for a total of 24.5 million possible IDs
     const gameID = generateGameID();
+    socket.join(gameID);
+
     const allWords = await db.collection('word_packs')
         .doc('standard')
         .get()
         .then(doc => doc.data()?.words)
         .catch(err => {console.log(err)});
 
-    if (!allWords) {
-        ctx.throw(500, 'Internal server error');
-    }
+    // if (!allWords) {
+    //     ctx.throw(500, 'Internal server error');
+    // }
 
     // shuffle the words
     shuffle(allWords);
@@ -67,16 +71,16 @@ export default async function newGame(ctx, next) {
         starting_team: teams[0],
         winner_team: null,
         cards: cards,
-        blue_team: [],
-        red_team: [],
-        game_log: []
+        game_log: [],
+        date: new Date()
     }
 
     await db.collection('games')
             .doc(gameID)
             .set(game)
             .then(() => {})
-            .catch(err => {ctx.throw(500, 'Internal server error')});
+            .catch(err => {});
 
-    ctx.body = game;
+    game.cards.forEach(card => {card.type = 'neutral'});
+    socket.emit('newGameState', game);
 }

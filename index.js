@@ -4,14 +4,8 @@ import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
 import { createServer } from "http";
 import { Server } from "socket.io";
-import  { db }  from './db/firestore.js'
 
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const firebase = require('firebase/app');
-
-import  newGame from './controllers/newGame.js'
-import  joinGame from './controllers/joinGame.js'
+import  { onConnection } from './controllers/ioController.js'
 
 
 const app = new Koa();
@@ -29,39 +23,7 @@ const io = new Server(httpServer, {
     }
 });
 
-
-const join = (socket, team, role, gameID) => {
-
-}
-io.on("connection", (socket) => {
-    console.log(socket.id);
-
-    socket.on('join', (team, role, nickname, gameID) => {
-        console.log(nickname);
-        // when a player joins a game they are added to a channel that has an ID of the game's id
-        socket.join(gameID);
-        const player = {
-            nickname,
-            role
-        }
-        socket.to(gameID).emit('player_join', nickname);
-
-        db.collection('games').doc(gameID).update({
-            [team]:  firebase.firestore.FieldValue.arrayUnion(player)
-        }).then().catch(err => {
-            console.log(err);
-        });
-    });
-
-
-
-
-    socket.on("disconnect", (reason) => {
-        console.log(reason);
-    });
-});
-
-
+io.on("connection", onConnection);
 
 app.use(async (ctx, next) => {
     try {
@@ -77,20 +39,3 @@ app.use(async (ctx, next) => {
         }
     }
 });
-
-// router.get('/newgame', async (ctx, next) => {
-//
-//     ctx.body = gameID;
-//
-//
-// },)
-
-router.post('/newgame',newGame);
-router.post('/joingame',joinGame);
-
-app.use(router.routes());
-
-
-// app.listen(PORT, null, () => {
-//     console.log("App running on port", PORT);
-// });
