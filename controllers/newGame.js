@@ -21,9 +21,8 @@ const generateGameID = () => {
     });
 }
 /**********************************************************************************************************************/
-export default async function newGame() {
+export default async function newGame(nickname) {
     const socket = this;
-    // const player = ctx.request.body.nickname;
 
     const gameID = generateGameID();
     socket.join(gameID);
